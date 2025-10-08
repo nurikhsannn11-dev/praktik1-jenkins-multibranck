@@ -2,25 +2,29 @@ pipeline {
     agent {
         docker {
             image 'python:3.10'
-            args '-u root'
+            args '-u root'  // Menjalankan kontainer sebagai root untuk menghindari masalah izin
         }
     }
 
     stages {
         stage('Install Dependencies') {
             steps {
+                // Pastikan file 'requirements.txt' ada di repositori Anda
                 sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
+                // Pastikan 'pytest' ada di requirements.txt dan file 'test_app.py' ada
                 sh 'pytest test_app.py'
+                 error("Sengaja dibuat gagal untuk screenshot")
             }
         }
 
         stage('Deploy') {
             when {
+                // Stage ini hanya berjalan di branch 'main' atau branch 'release/*'
                 anyOf {
                     branch 'main'
                     branch pattern: "release/.*", comparator: "REGEXP"
@@ -33,32 +37,25 @@ pipeline {
     }
 
     post {
-        success {
-            script {
-                def payload = [
-                    content: "✅ Build SUCCESS on `${env.BRANCH_NAME}`\n🔗URL: ${env.BUILD_URL}"
-                ]
-                httpRequest(
-                    httpMode: 'POST',
-                    contentType: 'APPLICATION_JSON',
-                    requestBody: groovy.json.JsonOutput.toJson(payload),
-                    url: 'https://discord.com/api/webhooks/1424938849984974951/_uImmwS8YgLPEEQzEtggphicpRbSfHNzZ5zwCyTI5p22CKSMxHOgTUppIqQuiSmiSBOv'
-                )
-            }
-        }
-
-        failure {
-            script {
-                def payload = [
-                    content: "❌ Build FAILED on `${env.BRANCH_NAME}`\n🔗URL: ${env.BUILD_URL}"
-                ]
-                httpRequest(
-                    httpMode: 'POST',
-                    contentType: 'APPLICATION_JSON',
-                    requestBody: groovy.json.JsonOutput.toJson(payload),
-                    url: 'https://discord.com/api/webhooks/1424938849984974951/_uImmwS8YgLPEEQzEtggphicpRbSfHNzZ5zwCyTI5p22CKSMxHOgTUppIqQuiSmiSBOv'
-                )
-            }
-        }
+    success {
+        discordSend(
+            webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0', // URL webhook Anda
+            title: "✅ Build SUCCESS on ${env.BRANCH_NAME}",
+            description: "URL: ${env.BUILD_URL}",
+            color: '#00ff00'
+        )
     }
+    failure {
+        discordSend(
+            webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0', // URL webhook Anda
+            title: "❌ Build FAILED on ${env.BRANCH_NAME}",
+            description: "URL: ${env.BUILD_URL}",
+            color: '#ff0000'
+        )
+    }
+    always {
+        // Membersihkan workspace setelah build selesai
+        cleanWs()
+    }
+  }
 }

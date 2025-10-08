@@ -36,25 +36,25 @@ pipeline {
     }
 
     post {
-        success {
-            // Mengirim notifikasi jika build SUKSES menggunakan Discord Notifier
-            discordSend(
-                webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0',
-                title: 'Build Succeeded',
-                message: "✅ Build SUKSES: Job `${env.JOB_NAME}` pada branch `${env.BRANCH_NAME}` berhasil.",
-                color: '#00ff00',
-                link: env.BUILD_URL
-            )
-        }
-        failure {
-            // Mengirim notifikasi jika build GAGAL menggunakan Discord Notifier
-            discordSend(
-                webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0',
-                title: 'Build Failed',
-                message: "❌ Build GAGAL: Job `${env.JOB_NAME}` pada branch `${env.BRANCH_NAME}` gagal.",
-                color: '#ff0000',
-                link: env.BUILD_URL
-            )
-        }
+    success {
+        discordSend(
+            webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0', // URL webhook Anda
+            title: "✅ Build SUCCESS on ${env.BRANCH_NAME}",
+            description: "URL: ${env.BUILD_URL}",
+            color: '#00ff00'
+        )
     }
+    failure {
+        discordSend(
+            webhookURL: 'https://ptb.discord.com/api/webhooks/1425392944931672106/SL865yKe8A0YkqtZF2igdoStSLDZK4QRsEF2hvaZ3iIdbsE7EYiKvS-IPWGgX_ElmUf0', // URL webhook Anda
+            title: "❌ Build FAILED on ${env.BRANCH_NAME}",
+            description: "URL: ${env.BUILD_URL}",
+            color: '#ff0000'
+        )
+    }
+    always {
+        // Membersihkan workspace setelah build selesai
+        cleanWs()
+    }
+  }
 }

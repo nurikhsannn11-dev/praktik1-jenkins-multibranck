@@ -18,7 +18,6 @@ pipeline {
             steps {
                 // Pastikan 'pytest' ada di requirements.txt dan file 'test_app.py' ada
                 sh 'pytest test_app.py'
-                 error("Sengaja dibuat gagal untuk screenshot")
             }
         }
 
